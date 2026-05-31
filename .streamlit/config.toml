@@ -1,0 +1,7 @@
+[theme]
+# TODO: swap in exact Learnvia brand colors when available
+primaryColor = "#2563EB"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F1F5F9"
+textColor = "#1E293B"
+font = "sans serif"
