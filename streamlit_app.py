@@ -6,10 +6,7 @@ from sympy import sympify, simplify
 st.set_page_config(page_title="Limit Practice", layout="centered")
 
 
-# ---------------------------------------------------------------------------
 # Problem generation & answer checking
-# ---------------------------------------------------------------------------
-
 def generate_problem() -> dict:
     a = random.choice(range(2, 40))
     c = a**2 + 2
@@ -22,25 +19,22 @@ def check_answer(student_str: str, a: int) -> str:
         return "unparseable"
     try:
         student = sympify(student_str)
-        # Reject symbolic (non-numeric) expressions — e.g. bare variable names.
+        # Reject symbolic (non-numeric) expressions.
         # is_number is False for anything containing free symbols.
         if not student.is_number:
             return "unparseable"
         true_answer = sympify(f"1/{a}")
         if simplify(student - true_answer) == 0:
             return "correct"
-        # Numeric fallback for decimals that symbolic simplification may not recognise as equal. Uses relative tolerance to stay accurate at small answer values. float() is safe here because is_number passed.
+        # Fallback for decimals sympy won't simplify to zero (e.g. 0.142857 for 1/7).
+        # abs_tol=1e-4: tight enough to reject neighbouring wrong answers across the full a range.
         if math.isclose(float(student), float(true_answer), abs_tol=1e-4):
             return "correct"
         return "incorrect"
     except Exception:
         return "unparseable"
 
-
-# ---------------------------------------------------------------------------
 # Diagnostic hint detection
-# ---------------------------------------------------------------------------
-
 def get_diagnostic_hint(student_str: str, problem: dict) -> str | None:
     a = problem["a"]
     try:
@@ -55,11 +49,7 @@ def get_diagnostic_hint(student_str: str, problem: dict) -> str | None:
         pass
     return None
 
-
-# ---------------------------------------------------------------------------
 # Session state helpers
-# ---------------------------------------------------------------------------
-
 def init_state():
     if "problem" not in st.session_state:
         st.session_state.problem = generate_problem()
@@ -79,58 +69,49 @@ def new_problem():
     st.session_state.explanation_opened = False
     st.session_state.counted = False
 
-
-# ---------------------------------------------------------------------------
 # Step-by-step explanation
-# ---------------------------------------------------------------------------
-
 def show_explanation(problem: dict):
     a, b, c = problem["a"], problem["b"], problem["c"]
-    c_minus_1 = c - 1
-    c_minus_2 = c - 2
+    a_squared = a**2  # == c - 2; b == c - 1, so both are used directly below
 
     st.write("**Step 1: Check the form at x = −1**")
     st.latex(r"\text{Numerator: } (-1) + 1 = 0")
     st.latex(
         rf"\text{{Denominator: }} (-1)^2 + {c}(-1) + {b} = 1 - {c} + {b} = 0"
     )
-    st.write("Both are 0, so this is the indeterminate form 0/0. Factor to resolve it.")
+    st.write("Both are 0, so this is the indeterminate form 0/0. We can factor to resolve it.")
 
     st.write("**Step 2: Factor the denominator**")
-    st.latex(rf"x^2 + {c}x + {b} = (x + 1)(x + {c_minus_1})")
+    st.latex(rf"x^2 + {c}x + {b} = (x + 1)(x + {b})")
 
     st.write("**Step 3: Cancel (x + 1)**")
     st.latex(
-        rf"\frac{{x + 1}}{{(x + 1)(x + {c_minus_1})}} = \frac{{1}}{{x + {c_minus_1}}}"
+        rf"\frac{{x + 1}}{{(x + 1)(x + {b})}} = \frac{{1}}{{x + {b}}}"
     )
 
     st.write("**Step 4: Evaluate at x = −1**")
-    st.latex(rf"\frac{{1}}{{-1 + {c_minus_1}}} = \frac{{1}}{{{c_minus_2}}}")
+    st.latex(rf"\frac{{1}}{{-1 + {b}}} = \frac{{1}}{{{a_squared}}}")
 
     st.write("**Step 5: Take the square root**")
     st.latex(
-        rf"\sqrt{{\frac{{1}}{{{c_minus_2}}}}} = \frac{{1}}{{\sqrt{{{c_minus_2}}}}} = \frac{{1}}{{{a}}}"
+        rf"\sqrt{{\frac{{1}}{{{a_squared}}}}} = \frac{{1}}{{\sqrt{{{a_squared}}}}} = \frac{{1}}{{{a}}}"
     )
 
-
-# ---------------------------------------------------------------------------
 # Key Insight
-# ---------------------------------------------------------------------------
-
 def show_key_insight(problem: dict):
     c, b = problem["c"], problem["b"]
 
     st.write(
         "When you substitute x = −1 into this expression, both the numerator "
         "and denominator equal zero, producing the indeterminate form 0/0. "
-        "This means direct substitution cannot give you the limit."
+        "This means we cannot use direct substitution to evaluate this limit."
     )
     st.latex(
         rf"\text{{At }} x = -1: \quad \frac{{(-1)+1}}{{(-1)^2 + {c}(-1) + {b}}} = \frac{{0}}{{0}}"
     )
     st.write(
-        "A 0/0 result doesn't mean the limit doesn't exist — it means the expression "
-        "is not yet in a form you can evaluate. For rational expressions like this one, "
+        "A 0/0 result doesn't mean the limit doesn't exist. It means the expression "
+        "is not yet in a form we can evaluate. For rational expressions like this one, "
         "0/0 at a point signals that the numerator and denominator share a common factor "
         "that can be cancelled."
     )
@@ -140,18 +121,14 @@ def show_key_insight(problem: dict):
     )
     st.write("**The method for this problem type:**")
     st.markdown(
-        "1. Substitute the target value — confirm you get 0/0\n"
+        "1. Substitute the target value to confirm it is of the form 0/0\n"
         "2. Factor numerator and denominator\n"
         "3. Cancel the shared factor\n"
         "4. Substitute the target value into the simplified expression\n"
         "5. Apply any remaining operations (here, the square root)"
     )
 
-
-# ---------------------------------------------------------------------------
 # Main
-# ---------------------------------------------------------------------------
-
 def main():
     init_state()
 
