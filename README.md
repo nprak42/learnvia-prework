@@ -2,7 +2,7 @@
 
 A Streamlit app that generates randomized calculus limit problems of a specific indeterminate form and checks student answers symbolically. Built as a pre-work drill for students entering a calculus course.
 
-**Live demo: calculus-drill.streamlit.app**
+**Live demo: [calculus-drill.streamlit.app](url)**
 
 ---
 
