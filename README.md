@@ -12,14 +12,14 @@ Each problem asks the student to evaluate:
 
 $$\lim_{x \to -1} \sqrt{\dfrac{x + 1}{x^2 + cx + b}}$$
 
-A single integer `a` is drawn at random from [2, 12]. The coefficients `c` and `b` are derived from it:
+A single integer `a` is drawn at random from [2, 40]. The coefficients `c` and `b` are derived from it:
 
 ```
 c = a² + 2
 b = c − 1
 ```
 
-This construction guarantees that the denominator factors as `(x + 1)(x + a² + 1)`, so `(x + 1)` always cancels with the numerator. After cancellation the expression simplifies to `√(1 / (x + a² + 1))`, which evaluates cleanly at x = −1 to `1/a`. Every generated problem therefore has an exact rational answer and requires no post-generation validation. The range [2, 12] keeps the coefficients legible and the answers (1/2 through 1/12) pedagogically appropriate for a Calculus I drill.
+This construction guarantees that the denominator factors as `(x + 1)(x + a² + 1)`, so `(x + 1)` always cancels with the numerator. After cancellation the expression simplifies to `√(1 / (x + a² + 1))`, which evaluates cleanly at x = −1 to `1/a`. Every generated problem therefore has an exact rational answer and requires no post-generation validation. The range [2, 40] keeps the coefficients legible and the answers (1/2 through 1/40) pedagogically appropriate for a Calculus I drill.
 
 ---
 
