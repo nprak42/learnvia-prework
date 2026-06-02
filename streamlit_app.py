@@ -8,7 +8,7 @@ st.set_page_config(page_title="Limit Practice", layout="centered")
 
 # Problem generation & answer checking
 def generate_problem() -> dict:
-    a = random.choice(range(2, 40))
+    a = random.choice(range(2, 41))
     c = a**2 + 2
     b = c - 1
     return {"a": a, "c": c, "b": b}
