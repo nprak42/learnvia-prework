@@ -1,8 +1,8 @@
-# Limit Practice — Calculus Drill App
+# Limit Practice App
 
-A Streamlit app that generates randomized calculus limit problems and checks student answers symbolically. Built as a pre-work drill for students entering a calculus course.
+A Streamlit app that generates randomized calculus limit problems of a specific indeterminate form and checks student answers symbolically. Built as a pre-work drill for students entering a calculus course.
 
-**Live demo: calculus-drill.streamlit.app** 
+**Live demo: calculus-drill.streamlit.app**
 
 ---
 
@@ -12,26 +12,22 @@ Each problem asks the student to evaluate:
 
 $$\lim_{x \to -1} \sqrt{\dfrac{x + 1}{x^2 + cx + b}}$$
 
-The student types a numeric answer (fraction or decimal), gets immediate feedback, and can reveal a full step-by-step explanation.
+The parameters are constructed so that the denominator always factors with `(x + 1)`, creating a removable discontinuity at x = −1. After cancellation, the expression reduces to a form that evaluates to a clean rational value — so every generated problem has an exact closed-form answer.
+
+---
+
+## User flow
+
+1. A randomized limit problem is displayed
+2. The student submits an answer (fraction or decimal)
+3. The system checks correctness using symbolic evaluation
+4. If incorrect, targeted hints are shown based on the specific error made
+5. A full step-by-step solution is available in an expandable section
+6. A key insight explains the reasoning pattern for this class of problems
 
 ---
 
 ## Design choices
-
-### Problem generation: guaranteeing a clean answer
-
-The quadratic denominator is constructed so that:
-1. `x = -1` is always a root (enabling cancellation with the numerator `x + 1`)
-2. The limit resolves to `1/a` for a random integer `a`
-
-Given a random integer `a ∈ [2, 99]`, the problem is built as:
-
-```
-c = a² + 2
-b = c - 1  →  x² + cx + b = (x + 1)(x + a²+1)
-```
-
-After cancelling `(x + 1)`, the simplified expression is `1 / (x + a²+1)`. Evaluating at `x = -1` gives `1 / a²`, and taking the square root gives `1 / a` — always a clean rational answer. This avoids the need to validate or reject generated problems; every `a` produces a valid, well-formed problem with an exact closed-form answer.
 
 ### Answer checking: symbolic + numeric fallback
 
@@ -42,24 +38,26 @@ Student input is passed through two checks in sequence:
 
 Inputs that fail parsing return `"unparseable"` rather than `"incorrect"` — a deliberate UX distinction so students aren't penalized for typos.
 
-### Step-by-step explanation
+### Error-specific hints
 
-The explanation is shown only after a submission (correct or incorrect) and is collapsed behind an expander by default. This prevents students from reading ahead before attempting the problem.
+Because the problem structure is fixed, common wrong answers are enumerable. The app checks symbolically for three specific mistakes — forgetting the square root, inverting the fraction, and off-by-one errors in factoring — before falling back to progressive hints that escalate with each attempt.
 
-The explanation reconstructs the full factoring and cancellation steps from the stored problem parameters, so it always matches the specific problem on screen.
+### Explanation and mastery loop
+
+The step-by-step solution is collapsed by default to prevent students from reading ahead. After viewing it, a prominent call-to-action prompts the student to solve a new problem, closing the loop between seeing a worked example and demonstrating independent mastery.
 
 ### Session state
 
-Streamlit reruns the entire script on every interaction. Problem state is stored in `st.session_state` to survive these reruns. The `last_result` and `last_input` fields let the feedback message and explanation persist after the student submits, without re-triggering the check on the next rerender.
+Streamlit reruns the entire script on every interaction. Problem state is stored in `st.session_state` to survive these reruns, so submitting an answer never changes the displayed problem.
 
 ---
 
-## Constraints and tradeoffs
+## Design constraints
 
-- **No persistence** — scores and attempts are not tracked across sessions. This is intentional for a simple drill tool; adding a backend would require auth and a database for minimal benefit at this scope.
-- **Single problem type** — the app only generates one class of limit (0/0 indeterminate form resolved by factoring). Extending to other limit types would require a more general problem representation and matching explanation renderer.
-- **`sympy` startup cost** — `sympify` is relatively slow on first call. For a low-traffic drill app this is acceptable; a high-traffic deployment might pre-warm a process pool.
-- **Input is arbitrary code** — `sympify` evaluates strings. SymPy mitigates this, but for a production deployment the input should be sanitized or restricted to a safe subset.
+- **Single problem type** — the app is intentionally scoped to one class of limits to keep focus on procedural mastery rather than broad problem classification. Extending to other limit types would require a more general problem representation and matching explanation renderer.
+- **No cross-session persistence** — scores reset on page reload. For a drill tool at this scope, adding a backend would introduce auth and storage complexity with minimal pedagogical benefit.
+- **`sympy` startup cost** — `sympify` is slow on first call. Acceptable for low-traffic use; a high-traffic deployment might pre-warm a process pool.
+- **Input evaluation** — `sympify` evaluates arbitrary strings. In this deployment (Streamlit Community Cloud, no persistent data, isolated containers) the blast radius is limited to the session. A backend deployment should restrict input to a safe character subset.
 
 ---
 

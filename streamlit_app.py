@@ -1,6 +1,5 @@
 import math
 import random
-import pandas as pd
 import streamlit as st
 from sympy import sympify, simplify
 
@@ -82,7 +81,7 @@ def new_problem():
 
 
 # ---------------------------------------------------------------------------
-# Step-by-step explanation (unchanged logic)
+# Step-by-step explanation
 # ---------------------------------------------------------------------------
 
 def show_explanation(problem: dict):
@@ -115,92 +114,37 @@ def show_explanation(problem: dict):
 
 
 # ---------------------------------------------------------------------------
-# Substitution sandbox
+# Key Insight
 # ---------------------------------------------------------------------------
 
-def _eval_original(x: float, c: float, b: float) -> str:
-    """Evaluate sqrt((x+1)/(x^2+cx+b)), returning a formatted string or 'undefined'."""
-    denom = x**2 + c * x + b
-    if abs(denom) < 1e-12:
-        return "undefined (0/0)"
-    inner = (x + 1) / denom
-    if inner < 0:
-        return "undefined (√ of negative)"
-    return f"{math.sqrt(inner):.6f}"
-
-
-def _eval_simplified(x: float, c: float) -> str:
-    """Evaluate 1/(x + c-1), the cancelled form, returning a formatted string."""
-    denom = x + c - 1
-    if abs(denom) < 1e-12:
-        return "undefined"
-    val = 1 / denom
-    if val < 0:
-        return "undefined (negative under root)"
-    return f"{math.sqrt(val):.6f}"
-
-
-def show_sandbox(problem: dict):
-    a, b, c = problem["a"], problem["b"], problem["c"]
-    limit_val = 1 / a
+def show_key_insight(problem: dict):
+    c, b = problem["c"], problem["b"]
 
     st.write(
-        "Plug in x values close to −1 and watch what happens. "
-        "The original expression blows up at x = −1, but the simplified form "
-        "stays well-behaved — and both converge to the same limit."
+        "When you substitute x = −1 into this expression, both the numerator "
+        "and denominator equal zero, producing the indeterminate form 0/0. "
+        "This means direct substitution cannot give you the limit."
     )
-
-    x_input = st.number_input(
-        "Try an x value near −1:",
-        value=-0.9,
-        min_value=-10.0,
-        max_value=10.0,
-        step=0.1,
-        format="%.4f",
-        key="sandbox_x",
+    st.latex(
+        rf"\text{{At }} x = -1: \quad \frac{{(-1)+1}}{{(-1)^2 + {c}(-1) + {b}}} = \frac{{0}}{{0}}"
     )
-
-    orig = _eval_original(x_input, c, b)
-    simp = _eval_simplified(x_input, c)
-
-    col_orig, col_simp = st.columns(2)
-    with col_orig:
-        st.markdown("**Original expression**")
-        st.latex(rf"\sqrt{{\dfrac{{x+1}}{{x^2+{c}x+{b}}}}}")
-        if "undefined" in orig:
-            st.error(f"x = {x_input:.4f} → {orig}")
-        else:
-            st.success(f"x = {x_input:.4f} → {orig}")
-    with col_simp:
-        st.markdown("**After cancelling (x+1)**")
-        st.latex(rf"\sqrt{{\dfrac{{1}}{{x+{c-1}}}}}")
-        st.success(f"x = {x_input:.4f} → {simp}")
-
-    st.divider()
-
-    # Convergence table: fixed x values approaching -1 from both sides
-    st.markdown("**Approaching x = −1 from both sides:**")
-    approach_xs = [-1.5, -1.1, -1.01, -1.001, "−1", -0.999, -0.99, -0.9, -0.5]
-    rows = []
-    for x in approach_xs:
-        if x == "−1":
-            rows.append({"x": "−1", "original": "undefined (0/0)", "simplified": "undefined (0/0)", "limit value": f"{limit_val:.6f}"})
-        else:
-            rows.append({
-                "x": f"{x:.3f}",
-                "original": _eval_original(x, c, b),
-                "simplified": _eval_simplified(x, c),
-                "limit value": f"{limit_val:.6f}",
-            })
-
-    df = pd.DataFrame(rows)
-    df.columns = ["x", "original f(x)", "simplified f(x)", f"limit = 1/{a}"]
-    st.dataframe(df, hide_index=True, use_container_width=True)
-
-    st.caption(
-        f"At x = −1 exactly, the original is 0/0. After cancelling (x+1), "
-        f"the simplified form gives 1/{a} = {limit_val:.4f} everywhere else — "
-        "that's the limit."
+    st.write(
+        "A 0/0 result doesn't mean the limit doesn't exist — it means the expression "
+        "is not yet in a form you can evaluate. For rational expressions like this one, "
+        "0/0 at a point signals that the numerator and denominator share a common factor "
+        "that can be cancelled."
+    )
+    st.write(
+        "Once that factor is cancelled, the resulting expression is continuous at x = −1 "
+        "and can be evaluated by direct substitution. The limit exists and equals a finite value."
+    )
+    st.write("**The method for this problem type:**")
+    st.markdown(
+        "1. Substitute the target value — confirm you get 0/0\n"
+        "2. Factor numerator and denominator\n"
+        "3. Cancel the shared factor\n"
+        "4. Substitute the target value into the simplified expression\n"
+        "5. Apply any remaining operations (here, the square root)"
     )
 
 
@@ -242,9 +186,8 @@ def main():
     with col1:
         if st.button("Submit", type="primary"):
             result = check_answer(answer_input, a)
-            if result != "unparseable":
-                if result == "incorrect":
-                    st.session_state.wrong_attempts += 1
+            if result == "incorrect":
+                st.session_state.wrong_attempts += 1
             st.session_state.last_result = result
             st.session_state.last_input = answer_input
 
@@ -297,9 +240,9 @@ def main():
                 new_problem()
                 st.rerun()
 
-    # --- Substitution sandbox expander ---
-    with st.expander("Why can't I just plug in x = −1?"):
-        show_sandbox(problem)
+    # --- Key Insight expander ---
+    with st.expander("Key Insight: why direct substitution fails here"):
+        show_key_insight(problem)
 
 
 if __name__ == "__main__":
