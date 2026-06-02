@@ -26,7 +26,7 @@ def check_answer(student_str: str, a: int) -> str:
         true_answer = sympify(f"1/{a}")
         if simplify(student - true_answer) == 0:
             return "correct"
-        # Fallback for decimals sympy won't simplify to zero (e.g. 0.142857 for 1/7).
+        # Fallback for decimals sympy won't simplify to zero (e.g. 0.142857 for 1/7 i.e non terminating repeating sequences).
         # abs_tol=1e-4: tight enough to reject neighbouring wrong answers across the full a range.
         if math.isclose(float(student), float(true_answer), abs_tol=1e-4):
             return "correct"
