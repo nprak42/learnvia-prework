@@ -184,7 +184,7 @@ def show_sandbox(problem: dict):
     rows = []
     for x in approach_xs:
         if x == "−1":
-            rows.append({"x": "−1", "original": "undefined (0/0)", "simplified": "undefined (0/0)", "limit": f"{limit_val:.6f}"})
+            rows.append({"x": "−1", "original": "undefined (0/0)", "simplified": "undefined (0/0)", "limit value": f"{limit_val:.6f}"})
         else:
             rows.append({
                 "x": f"{x:.3f}",

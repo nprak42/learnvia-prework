@@ -2,7 +2,7 @@
 
 A Streamlit app that generates randomized calculus limit problems and checks student answers symbolically. Built as a pre-work drill for students entering a calculus course.
 
-**Live demo:** _(add your Streamlit Cloud link here)_
+**Live demo: calculus-drill.streamlit.app** 
 
 ---
 
@@ -46,7 +46,7 @@ Inputs that fail parsing return `"unparseable"` rather than `"incorrect"` — a 
 
 The explanation is shown only after a submission (correct or incorrect) and is collapsed behind an expander by default. This prevents students from reading ahead before attempting the problem.
 
-The explanation reconstructs the full factoring and cancellation steps from the stored problem parameters, so it always matches the specific problem on screen — not a generic template.
+The explanation reconstructs the full factoring and cancellation steps from the stored problem parameters, so it always matches the specific problem on screen.
 
 ### Session state
 
