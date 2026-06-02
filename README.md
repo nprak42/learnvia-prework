@@ -41,7 +41,7 @@ This construction guarantees that the denominator factors as `(x + 1)(x + a² + 
 Student input is passed through two checks in sequence:
 
 1. **Symbolic equality via `sympy`** — `sympify` parses the input and `simplify(student - true_answer) == 0` checks exact equivalence. This accepts `1/7`, `sqrt(1/49)`, and equivalent expressions without hardcoding formats.
-2. **Numeric fallback** — `math.isclose(..., abs_tol=1e-4)` catches valid decimal approximations (e.g. `0.142857` for 1/7). Absolute tolerance is used because the answer range is bounded (1/2 down to 1/39); `1e-4` is tight enough to reject neighbouring wrong answers while accepting any reasonable 4+ decimal-place input a student would type. The old `abs_tol=0.01` was slightly loose at `a=40`, answers `1/39` and `1/40` are only `~6.4e-4` apart, which the old tolerance would have passed.
+2. **Numeric fallback** — math.isclose(..., abs_tol=1e-4) catches valid decimal approximations (e.g. 0.142857 for 1/7). Absolute tolerance is used because the answer range is bounded (1/2 down to 1/40); 1e-4 is tight enough to reject neighbouring wrong answers while accepting any reasonable 4+ decimal-place input a student would type. The initial approach using abs_tol=0.01 was dangerously loose. The two closest answers in the range, 1/39 and 1/40, are only ~6.4e-4 apart, which it would have wrongly accepted
 
 Inputs that fail parsing return `"unparseable"` rather than `"incorrect"` which is a deliberate UX distinction so students aren't penalized for typos.
 
