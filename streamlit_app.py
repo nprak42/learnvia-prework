@@ -11,7 +11,7 @@ st.set_page_config(page_title="Limit Practice", layout="centered")
 # ---------------------------------------------------------------------------
 
 def generate_problem() -> dict:
-    a = random.choice(range(2, 100))
+    a = random.choice(range(2, 25))
     c = a**2 + 2
     b = c - 1
     return {"a": a, "c": c, "b": b}
@@ -22,10 +22,17 @@ def check_answer(student_str: str, a: int) -> str:
         return "unparseable"
     try:
         student = sympify(student_str)
+        # Reject symbolic (non-numeric) expressions — e.g. bare variable names.
+        # is_number is False for anything containing free symbols.
+        if not student.is_number:
+            return "unparseable"
         true_answer = sympify(f"1/{a}")
         if simplify(student - true_answer) == 0:
             return "correct"
-        if math.isclose(float(student), float(true_answer), abs_tol=0.01):
+        # Numeric fallback for decimals that symbolic simplification may not
+        # recognise as equal. Uses relative tolerance to stay accurate at small
+        # answer values. float() is safe here because is_number passed.
+        if math.isclose(float(student), float(true_answer), abs_tol=1e-4):
             return "correct"
         return "incorrect"
     except Exception:
@@ -37,22 +44,15 @@ def check_answer(student_str: str, a: int) -> str:
 # ---------------------------------------------------------------------------
 
 def get_diagnostic_hint(student_str: str, problem: dict) -> str | None:
-    a, c = problem["a"], problem["c"]
+    a = problem["a"]
     try:
         student = sympify(student_str)
-        # Forgot the square root: answer is 1/a^2 = 1/(c-2)
+        # Forgot the square root: answer is 1/a² (the value inside the root)
         if simplify(student - sympify(f"1/{a**2}")) == 0:
-            return "Close — you found what's inside the root. Don't forget to take the square root at the end."
+            return "Close — you found the value inside the square root. Don't forget to take the square root at the end."
         # Inverted fraction: answer is a instead of 1/a
         if simplify(student - sympify(str(a))) == 0:
-            return f"Check your final step — is the limit `{a}` or `1/{a}`? Look at where the 1 ends up."
-        # Off-by-one in the factor: used c or c±1 instead of c-2 = a^2
-        for wrong_denom in [c, c - 1, c + 1]:
-            if simplify(student - sympify(f"1/{wrong_denom}")) == 0:
-                return (
-                    "Re-check the denominator factor: "
-                    f"x² + {c}x + {c - 1} = (x + 1)(x + ?). Substitute carefully."
-                )
+            return f"Check your final step — is the limit {a} or 1/{a}? Look at where the 1 ends up after cancellation."
     except Exception:
         pass
     return None
@@ -70,6 +70,7 @@ def init_state():
         st.session_state.wrong_attempts = 0
         st.session_state.explanation_opened = False
         st.session_state.solved_count = 0
+        st.session_state.counted = False  # guards against double-increment on rerun
 
 
 def new_problem():
@@ -78,6 +79,7 @@ def new_problem():
     st.session_state.last_input = ""
     st.session_state.wrong_attempts = 0
     st.session_state.explanation_opened = False
+    st.session_state.counted = False
 
 
 # ---------------------------------------------------------------------------
@@ -200,11 +202,13 @@ def main():
     result = st.session_state.last_result
 
     if result == "correct":
-        if not st.session_state.explanation_opened:
+        if not st.session_state.counted:
             st.session_state.solved_count += 1
+            st.session_state.counted = True
+        if not st.session_state.explanation_opened:
             st.success(f"Correct! Well done. (Solved: {st.session_state.solved_count})")
         else:
-            st.success("Correct! Now you've worked through it!")
+            st.success(f"Correct! You worked through it and got there. (Solved: {st.session_state.solved_count})")
 
     elif result == "incorrect":
         diagnostic = get_diagnostic_hint(answer_input, problem)

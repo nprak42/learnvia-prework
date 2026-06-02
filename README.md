@@ -12,7 +12,14 @@ Each problem asks the student to evaluate:
 
 $$\lim_{x \to -1} \sqrt{\dfrac{x + 1}{x^2 + cx + b}}$$
 
-The parameters are constructed so that the denominator always factors with `(x + 1)`, creating a removable discontinuity at x = −1. After cancellation, the expression reduces to a form that evaluates to a clean rational value — so every generated problem has an exact closed-form answer.
+A single integer `a` is drawn at random from [2, 12]. The coefficients `c` and `b` are derived from it:
+
+```
+c = a² + 2
+b = c − 1
+```
+
+This construction guarantees that the denominator factors as `(x + 1)(x + a² + 1)`, so `(x + 1)` always cancels with the numerator. After cancellation the expression simplifies to `√(1 / (x + a² + 1))`, which evaluates cleanly at x = −1 to `1/a`. Every generated problem therefore has an exact rational answer and requires no post-generation validation. The range [2, 12] keeps the coefficients legible and the answers (1/2 through 1/12) pedagogically appropriate for a Calculus I drill.
 
 ---
 
@@ -34,13 +41,18 @@ The parameters are constructed so that the denominator always factors with `(x +
 Student input is passed through two checks in sequence:
 
 1. **Symbolic equality via `sympy`** — `sympify` parses the input and `simplify(student - true_answer) == 0` checks exact equivalence. This accepts `1/7`, `sqrt(1/49)`, and equivalent expressions without hardcoding formats.
-2. **Numeric fallback** — `math.isclose(..., abs_tol=0.01)` catches valid decimal approximations that symbolic simplification might not recognize as equal (e.g. `0.142857`).
+2. **Numeric fallback** — `math.isclose(..., rel_tol=1e-6)` catches valid decimal approximations (e.g. `0.142857` for 1/7). Relative tolerance is used rather than absolute to avoid false positives at small answer values. If `float()` conversion raises (e.g. for a non-numeric sympy expression), the fallback is skipped and the answer is graded incorrect rather than unparseable.
 
 Inputs that fail parsing return `"unparseable"` rather than `"incorrect"` which is a deliberate UX distinction so students aren't penalized for typos.
 
 ### Error-specific hints
 
-Because the problem structure is fixed, common wrong answers are enumerable. The app checks symbolically for three specific mistakes which are: forgetting the square root, inverting the fraction, and off-by-one errors in factoring. 
+Because the problem structure is fixed, the most common wrong answers are enumerable. The app checks symbolically for two specific mistakes before falling back to progressive hints:
+
+- **Forgot the square root** — answer equals `1/a²` (the value inside the radical before taking the root)
+- **Inverted the fraction** — answer equals `a` instead of `1/a`
+
+Both checks use exact symbolic comparison (`simplify(student − wrong) == 0`), so they fire only when the match is unambiguous. Unmatched wrong answers trigger escalating generic hints based on attempt count.
 
 ### Explanation and mastery loop
 
