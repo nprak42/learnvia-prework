@@ -2,8 +2,6 @@
 Pure logic tests for streamlit_app.py.
 UI flow (session_state, rendering) tested manually.
 """
-import math
-import pytest
 from sympy import sqrt, Rational, simplify
 
 from streamlit_app import check_answer, generate_problem, get_diagnostic_hint
@@ -66,14 +64,13 @@ class TestTolerance:
         assert check_answer("0.14285714", 7) == "correct"
 
     def test_neighbouring_fraction_rejected(self):
-        # The old abs_tol=0.01 bug: |1/99 - 1/100| ≈ 1e-4, borderline.
-        # At abs_tol=1e-4, math.isclose uses abs(a-b) <= max(rel*max(a,b), abs_tol)
-        # and the symbolic check catches exact fractions first — 1/99 != 1/100
-        # so this must be incorrect.
-        assert check_answer("1/99", 100) == "incorrect"
+        # a=40 is the top of the generated range: |1/39 - 1/40| ≈ 6.4e-4 > abs_tol=1e-4,
+        # so 1/39 must be rejected when the answer is 1/40.
+        assert check_answer("1/39", 40) == "incorrect"
 
     def test_exact_fraction_at_high_a(self):
-        assert check_answer("1/100", 100) == "correct"
+        # a=40 is the top of the generated range; confirm the grader accepts it.
+        assert check_answer("1/40", 40) == "correct"
 
 
 # ---------------------------------------------------------------------------
@@ -98,18 +95,18 @@ class TestGenerationInvariant:
     def test_invariants_hold_across_full_range(self):
         # Run enough samples to cover the full a range many times over.
         # Because generate_problem() picks randomly, 200 draws gives P(missing
-        # any single value from range(2,25)) < (22/23)^200 < 0.01%.
+        # any single value from range(2,40)) < (37/38)^200 < 0.5%.
         for _ in range(200):
             self._assert_invariants(generate_problem())
 
     def test_a_within_declared_range(self):
         for _ in range(200):
             a = generate_problem()["a"]
-            assert 2 <= a <= 24, f"a={a} outside [2, 24]"
+            assert 2 <= a <= 40, f"a={a} outside [2, 40]"
 
     def test_check_answer_accepts_correct_string_for_full_range(self):
         # Verify the grader agrees with the generator for every possible a.
-        for a in range(2, 25):
+        for a in range(2, 41):
             assert check_answer(f"1/{a}", a) == "correct", f"grader rejected 1/{a}"
 
 
