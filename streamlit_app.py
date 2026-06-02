@@ -11,7 +11,7 @@ st.set_page_config(page_title="Limit Practice", layout="centered")
 # ---------------------------------------------------------------------------
 
 def generate_problem() -> dict:
-    a = random.choice(range(2, 25))
+    a = random.choice(range(2, 40))
     c = a**2 + 2
     b = c - 1
     return {"a": a, "c": c, "b": b}
@@ -29,9 +29,7 @@ def check_answer(student_str: str, a: int) -> str:
         true_answer = sympify(f"1/{a}")
         if simplify(student - true_answer) == 0:
             return "correct"
-        # Numeric fallback for decimals that symbolic simplification may not
-        # recognise as equal. Uses relative tolerance to stay accurate at small
-        # answer values. float() is safe here because is_number passed.
+        # Numeric fallback for decimals that symbolic simplification may not recognise as equal. Uses relative tolerance to stay accurate at small answer values. float() is safe here because is_number passed.
         if math.isclose(float(student), float(true_answer), abs_tol=1e-4):
             return "correct"
         return "incorrect"
